@@ -1,8 +1,8 @@
 /*! 
-  glIpv4Range v(0.0.5) 
+  glIpv4Range v(0.0.6) 
   (c) 2013-2015
   https://gluenetworks.kilnhg.com/Code/Web-Development
-  Release Date: 2015-03-12 
+  Release Date: 2015-03-13 
 */
 angular.module("glIpv4Range", [ "glTextfield" ]), angular.module("glIpv4Range").directive("glIpv4Range", [ "$compile", function($compile) {
     "use strict";
@@ -32,21 +32,24 @@ angular.module("glIpv4Range", [ "glTextfield" ]), angular.module("glIpv4Range").
             }
             // set segment model values
             function onKeyUp1() {
-                scope.api._data.ipSegments[0] = scope.api1.getValue();
+                scope.api._data.ipSegments[0] = scope.api1.getValue(), processOnChange();
             }
             function onKeyUp2() {
-                scope.api._data.ipSegments[1] = scope.api2.getValue();
+                scope.api._data.ipSegments[1] = scope.api2.getValue(), processOnChange();
             }
             function onKeyUp3() {
-                scope.api._data.ipSegments[2] = scope.api3.getValue();
+                scope.api._data.ipSegments[2] = scope.api3.getValue(), processOnChange();
             }
             function onKeyUp4() {
-                scope.api._data.ipSegments[3] = scope.api4.getValue();
+                scope.api._data.ipSegments[3] = scope.api4.getValue(), processOnChange();
             }
             function onKeyUp5() {
-                scope.api._data.ipSegments[4] = scope.api5.getValue();
+                scope.api._data.ipSegments[4] = scope.api5.getValue(), processOnChange();
             }
-            var elementInputsContainer, elementError, elementLabel, elementValue, elementSegmentSeperator, elementSegmentRangeSeperator, elementInputs = [];
+            function processOnChange() {
+                angular.isFunction(scope.api._data.onChange) && scope.api._data.onChange(scope.api.getValue());
+            }
+            var elementInputsContainer, elementError, elementLabel, elementValue, elementSegmentSeperator, elementSegmentRangeSeperator, childScope = scope.$new(), elementInputs = [];
             scope.api = scope.api || {}, scope.api._data = {}, scope.api._data.capsLocked = !1, 
             scope.api._data.numberMouseOverSpinner = !1;
             var classError = "gl-textfield-error", classLabel = "gl-textfield-view-label", classValue = "gl-textfield-view-value";
@@ -92,6 +95,7 @@ angular.module("glIpv4Range", [ "glTextfield" ]), angular.module("glIpv4Range").
             scope.api._data.placeholder = angular.isUndefined(scope.settings.placeholder) ? void 0 : scope.settings.placeholder, 
             scope.api._data.error = angular.isUndefined(scope.settings.error) ? void 0 : scope.settings.error, 
             scope.api._data.editable = angular.isUndefined(scope.settings.editable) ? !0 : scope.settings.editable, 
+            scope.api._data.onChange = angular.isFunction(scope.settings.onChange) ? scope.settings.onChange : void 0, 
             scope.api.setInvalid = function(msg) {
                 scope.api._data.valid = !1, scope.api1.setInvalid(), scope.api2.setInvalid(), scope.api3.setInvalid(), 
                 scope.api4.setInvalid(), scope.api5.setInvalid(), scope.api._data.error = angular.isString(msg) ? msg : void 0, 
@@ -133,21 +137,21 @@ angular.module("glIpv4Range", [ "glTextfield" ]), angular.module("glIpv4Range").
                 scope.api4.enable(), scope.api5.enable();
             };
             var getElementInputs = function() {
-                elementInputsContainer = angular.element(templateInputsContainer), elementSegmentSeperator = angular.element(templateSeperator), 
-                elementSegmentRangeSeperator = angular.element(templateRangeSeperator);
+                childScope.$destroy(), element.children().remove(), childScope = scope.$new(), elementInputsContainer = angular.element(templateInputsContainer), 
+                elementSegmentSeperator = angular.element(templateSeperator), elementSegmentRangeSeperator = angular.element(templateRangeSeperator);
                 for (var i = 0; i < templateInputs.length; i++) {
                     var template = templateInputs[i], el = angular.element(template);
                     elementInputs[i] = el, elementInputsContainer.append(elementInputs[i]), 3 > i && elementInputsContainer.append(elementSegmentSeperator.clone()), 
                     3 == i && elementInputsContainer.append(elementSegmentRangeSeperator.clone());
                 }
-                var compiledEls = $compile(elementInputsContainer)(scope);
-                return scope.api._data.disabled && scope.api.disable(), compiledEls;
+                var compiledEls = $compile(elementInputsContainer)(childScope);
+                scope.api._data.disabled && scope.api.disable(), element.append(compiledEls);
             }, setViewMode = function() {
                 scope.api._data.editable = !1, element.children().remove(), angular.isString(scope.api._data.label) && (elementLabel = $compile(angular.element(templateLabel))(scope), 
                 element.append(elementLabel)), elementValue = $compile(angular.element(templateValue))(scope), 
                 elementValue.html(scope.api.getValue()), element.append(elementValue);
             }, setEditMode = function() {
-                scope.api._data.editable = !0, element.children().remove(), element.append(getElementInputs());
+                scope.api._data.editable = !0, getElementInputs();
                 var v = scope.api.getValue();
                 // init validity
                 if (scope.api.setValue(v), scope.api._data.valid) scope.api.setValid(); else {

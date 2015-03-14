@@ -11,6 +11,8 @@ angular.module('glIpv4Range').directive('glIpv4Range', ["$compile", function ($c
 
       link: function (scope, element, attrs, controller) {
 
+        var childScope = scope.$new();
+
         var elementInputs = [];
         var elementInputsContainer;
         var elementError;
@@ -70,6 +72,8 @@ angular.module('glIpv4Range').directive('glIpv4Range', ["$compile", function ($c
         scope.api._data.placeholder = angular.isUndefined(scope.settings.placeholder) ? undefined : scope.settings.placeholder;
         scope.api._data.error = angular.isUndefined(scope.settings.error) ? undefined : scope.settings.error;
         scope.api._data.editable = angular.isUndefined(scope.settings.editable) ? true : scope.settings.editable;
+        scope.api._data.onChange = angular.isFunction(scope.settings.onChange) ? scope.settings.onChange : undefined;
+
 
         scope.api.setInvalid = function(msg){
           scope.api._data.valid = false;
@@ -174,6 +178,10 @@ angular.module('glIpv4Range').directive('glIpv4Range', ["$compile", function ($c
 
         var getElementInputs = function(){
 
+          childScope.$destroy();
+          element.children().remove();
+          childScope = scope.$new();
+
           elementInputsContainer = angular.element(templateInputsContainer);
           elementSegmentSeperator = angular.element(templateSeperator);
           elementSegmentRangeSeperator = angular.element(templateRangeSeperator);
@@ -187,13 +195,13 @@ angular.module('glIpv4Range').directive('glIpv4Range', ["$compile", function ($c
             if(i == 3) elementInputsContainer.append(elementSegmentRangeSeperator.clone());
           }
 
-          var compiledEls = $compile(elementInputsContainer)(scope);
+          var compiledEls = $compile(elementInputsContainer)(childScope);
 
           if(scope.api._data.disabled){
             scope.api.disable();
           }
 
-          return compiledEls;
+          element.append(compiledEls);
         }
 
         var setViewMode = function(){
@@ -213,8 +221,8 @@ angular.module('glIpv4Range').directive('glIpv4Range', ["$compile", function ($c
         var setEditMode = function(){
 
           scope.api._data.editable = true;
-          element.children().remove();
-          element.append(getElementInputs());
+
+          getElementInputs();
 
           var v = scope.api.getValue();
           scope.api.setValue(v);
@@ -273,24 +281,34 @@ angular.module('glIpv4Range').directive('glIpv4Range', ["$compile", function ($c
         // set segment model values
         function onKeyUp1(evt){
           scope.api._data.ipSegments[0] = scope.api1.getValue();;
+          processOnChange();
         }
 
         function onKeyUp2(evt){
           scope.api._data.ipSegments[1] = scope.api2.getValue();
+          processOnChange();
         }
 
         function onKeyUp3(evt){
           scope.api._data.ipSegments[2] = scope.api3.getValue();
+          processOnChange();
         }
 
         function onKeyUp4(evt){
           scope.api._data.ipSegments[3] = scope.api4.getValue();
+          processOnChange();
         }
 
         function onKeyUp5(evt){
           scope.api._data.ipSegments[4] = scope.api5.getValue();
+          processOnChange();
         }
 
+        function processOnChange(){
+          if(angular.isFunction(scope.api._data.onChange)){
+            scope.api._data.onChange(scope.api.getValue());
+          }
+        }
 
         // INIT
         if(angular.isString(scope.api._data.placeholder)){
